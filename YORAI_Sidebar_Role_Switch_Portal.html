@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YORAI EPC Lifecycle Navigation – Role View</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    #chatIcon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background-color: #2563eb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    #chatBox {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      height: 380px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      z-index: 99;
+      font-family: sans-serif;
+    }
+    #chatBoxHeader {
+      background-color: #2563eb;
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    #chatMessages {
+      flex-grow: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    #chatInput {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+    #chatInput input {
+      flex-grow: 1;
+      border: none;
+      padding: 10px;
+      font-size: 14px;
+    }
+    #chatInput button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 0 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex h-screen">
+
+  <!-- Sidebar -->
+  <div class="w-72 bg-white border-r shadow-md flex flex-col overflow-y-auto">
+    <div class="p-4 border-b text-center font-bold text-lg bg-gray-200">YORAI EPC Flow</div>
+
+    <!-- Role Selector -->
+    <div class="px-4 py-2 border-b bg-gray-50 text-sm">
+      <label for="role" class="block font-semibold mb-1 text-gray-700">Select Role:</label>
+      <select id="role" onchange="switchRole()" class="w-full border border-gray-300 rounded px-2 py-1">
+        <option value="client">Client</option>
+        <option value="epc">EPC Contractor</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+
+    <!-- Navigation Links -->
+    <div id="navLinks" class="p-4 space-y-4 text-sm"></div>
+  </div>
+
+  <!-- Main content -->
+  <div class="flex-1">
+    <iframe id="demoFrame" src="https://codepen.io/Raied-Ayesh/full/XJJdKmv" class="w-full h-full border-none"></iframe>
+  </div>
+
+  <!-- Chat -->
+  <div id="chatIcon" onclick="toggleChat()">💬</div>
+  <div id="chatBox">
+    <div id="chatBoxHeader">YORAI Assistant</div>
+    <div id="chatMessages"></div>
+    <div id="chatInput">
+      <input type="text" id="chatTextInput" placeholder="Ask a question..." onkeypress="handleEnter(event)" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const navData = {
+      client: [
+        { phase: "📘 Phase 1: Project Initialization", links: [
+          { name: "Project Status Overview", url: "https://codepen.io/Raied-Ayesh/full/XJJdKmv" },
+          { name: "FEED Setup", url: "https://codepen.io/Raied-Ayesh/full/dPPMYqz" }
+        ]},
+        { phase: "📑 Phase 2: Tendering & Bid Evaluation", links: [
+          { name: "ITB Generator", url: "https://codepen.io/Raied-Ayesh/full/pvvyjXv" },
+          { name: "Bidder Submission", url: "https://codepen.io/Raied-Ayesh/full/MYYyKWK" },
+          { name: "Evaluation Panel", url: "https://codepen.io/Raied-Ayesh/full/raaexMj" }
+        ]},
+        { phase: "📐 Phase 4: Execution View", links: [
+          { name: "Dashboard", url: "https://codepen.io/Raied-Ayesh/full/bNNEQbM" },
+          { name: "Post-Award Overview", url: "https://codepen.io/Raied-Ayesh/full/NPPxEBJ" }
+        ]}
+      ],
+      epc: [
+        { phase: "🤝 Phase 3: Award & Subcontractors", links: [
+          { name: "Subcontractor Evaluation", url: "https://codepen.io/Raied-Ayesh/full/zxxqrwd" }
+        ]},
+        { phase: "📐 Phase 4: Execution & Design Review", links: [
+          { name: "Document Upload", url: "https://codepen.io/Raied-Ayesh/full/wBBMQdE" },
+          { name: "AI Review", url: "https://codepen.io/Raied-Ayesh/full/oggbQeW" },
+          { name: "Approval Routing", url: "https://codepen.io/Raied-Ayesh/full/YPPwReE" },
+          { name: "Compliance Summary", url: "https://codepen.io/Raied-Ayesh/full/OPPMavo" }
+        ]},
+        { phase: "💰 Phase 5: Invoicing", links: [
+          { name: "Invoice Submission", url: "https://codepen.io/Raied-Ayesh/full/MYYyKVp" }
+        ]}
+      ],
+      admin: [
+        { phase: "🛠 All Modules", links: [
+          { name: "Project Status Overview", url: "https://codepen.io/Raied-Ayesh/full/XJJdKmv" },
+          { name: "FEED Setup", url: "https://codepen.io/Raied-Ayesh/full/dPPMYqz" },
+          { name: "ITB Generator", url: "https://codepen.io/Raied-Ayesh/full/pvvyjXv" },
+          { name: "Bidder Submission", url: "https://codepen.io/Raied-Ayesh/full/MYYyKWK" },
+          { name: "Evaluation Panel", url: "https://codepen.io/Raied-Ayesh/full/raaexMj" },
+          { name: "Subcontractor Evaluation", url: "https://codepen.io/Raied-Ayesh/full/zxxqrwd" },
+          { name: "Dashboard", url: "https://codepen.io/Raied-Ayesh/full/bNNEQbM" },
+          { name: "Post-Award Overview", url: "https://codepen.io/Raied-Ayesh/full/NPPxEBJ" },
+          { name: "Document Upload", url: "https://codepen.io/Raied-Ayesh/full/wBBMQdE" },
+          { name: "AI Review", url: "https://codepen.io/Raied-Ayesh/full/oggbQeW" },
+          { name: "Approval Routing", url: "https://codepen.io/Raied-Ayesh/full/YPPwReE" },
+          { name: "Compliance Summary", url: "https://codepen.io/Raied-Ayesh/full/OPPMavo" },
+          { name: "Invoice Submission", url: "https://codepen.io/Raied-Ayesh/full/MYYyKVp" }
+        ]}
+      ]
+    };
+
+    function switchRole() {
+      const role = document.getElementById('role').value;
+      const nav = document.getElementById('navLinks');
+      nav.innerHTML = '';
+      navData[role].forEach(group => {
+        const section = document.createElement('div');
+        const title = document.createElement('h2');
+        title.textContent = group.phase;
+        title.className = "text-blue-700 font-bold mb-1";
+        section.appendChild(title);
+        const list = document.createElement('ul');
+        list.className = "ml-2 space-y-1";
+        group.links.forEach(link => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = "#";
+          a.className = "text-blue-600";
+          a.textContent = link.name;
+          a.onclick = () => loadPage(link.url);
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+        section.appendChild(list);
+        nav.appendChild(section);
+      });
+    }
+
+    function loadPage(url) {
+      document.getElementById('demoFrame').src = url;
+    }
+
+    function toggleChat() {
+      const chatBox = document.getElementById('chatBox');
+      chatBox.style.display = chatBox.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chatTextInput');
+      const messages = document.getElementById('chatMessages');
+      const msg = input.value.trim();
+      if (!msg) return;
+      messages.innerHTML += "<div class='mb-2'>👤 " + msg + "</div>";
+      messages.innerHTML += "<div class='text-gray-600 text-sm mb-2'>🤖 I’m still learning. Please check the related module or contact support.</div>";
+      input.value = "";
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function handleEnter(e) {
+      if (e.key === 'Enter') sendMessage();
+    }
+
+    window.onload = switchRole;
+  </script>
+
+</body>
+</html>
